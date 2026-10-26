@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NumPy interview notes</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f1ea;
+      --paper: #fffdf8;
+      --ink: #1c1915;
+      --muted: #5c564c;
+      --line: #e4ddd0;
+      --accent: #8a3e12;
+      --code: #f3eee4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.55;
+    }
+    header {
+      padding: 2.5rem 1.5rem 1.5rem;
+      border-bottom: 1px solid var(--line);
+      background: var(--paper);
+    }
+    main {
+      max-width: 46rem;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 4rem;
+    }
+    header, main { max-width: 46rem; margin-left: auto; margin-right: auto; }
+    h1 { font-size: 2rem; font-weight: 600; margin: 0 0 0.4rem; }
+    h2 {
+      font-size: 1.25rem;
+      margin: 2.2rem 0 0.6rem;
+      padding-top: 0.4rem;
+    }
+    p, li { font-size: 1.05rem; }
+    .lede { color: var(--muted); margin: 0; }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem 0.9rem;
+      margin-top: 1.1rem;
+      font-family: "Segoe UI", sans-serif;
+      font-size: 0.86rem;
+    }
+    nav a { color: var(--accent); text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+    article {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0.2rem 1.15rem 0.4rem;
+      margin-top: 1rem;
+    }
+    .q { font-weight: 600; }
+    code, pre {
+      font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+      font-size: 0.88rem;
+    }
+    code {
+      background: var(--code);
+      padding: 0.08rem 0.28rem;
+      border-radius: 4px;
+    }
+    pre {
+      background: #241f1a;
+      color: #f6f1e7;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      line-height: 1.45;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.6rem 0 1rem;
+      font-size: 0.98rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.4rem 0.55rem;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    th { font-family: "Segoe UI", sans-serif; font-size: 0.8rem; letter-spacing: 0.03em; color: var(--muted); }
+    footer { color: var(--muted); font-size: 0.9rem; margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>NumPy interview notes</h1>
+    <p class="lede">Short answers from the practice scripts in this project. Each question names the file it comes from.</p>
+    <nav>
+      <a href="#ndarray">ndarray</a>
+      <a href="#fast">Why it is fast</a>
+      <a href="#attributes">Attributes</a>
+      <a href="#shape">Shape and 3D</a>
+      <a href="#index">Indexing</a>
+      <a href="#bool">Boolean index</a>
+      <a href="#broadcast">Broadcasting</a>
+      <a href="#axis">Axis</a>
+      <a href="#stack">Stacking</a>
+      <a href="#matmul">@ and *</a>
+      <a href="#reshape">Reshape</a>
+      <a href="#sort">Sort and where</a>
+    </nav>
+  </header>
+  <main>
+    <section id="ndarray">
+      <h2>ndarray</h2>
+      <article>
+        <p class="q">What is a NumPy array?</p>
+        <p>An <code>ndarray</code> is a block of values that all have the same type. A Python list holds pointers to separate objects. An ndarray holds the numbers themselves, packed together, plus a shape that says how to read them as rows and columns.</p>
+      </article>
+      <article>
+        <p class="q">Is a matrix the same as a multidimensional array?</p>
+        <p>A matrix is a 2D array. A multidimensional array can have 1, 2, 3, or more axes, so every matrix is an ndarray, and a 3D array is not a matrix.</p>
+        <p>NumPy also has an old <code>np.matrix</code> type that is always 2D. In an interview, say you use a normal <code>ndarray</code> and <code>@</code> for matrix multiplication.</p>
+      </article>
+    </section>
+
+    <section id="fast">
+      <h2>Why NumPy is fast</h2>
+      <article>
+        <p class="q">Why is <code>scores + 5</code> faster than a Python loop?</p>
+        <ul>
+          <li>The loop runs in compiled C. Python is called once for the whole array.</li>
+          <li>Values sit next to each other in memory, so the CPU can load many at once.</li>
+          <li>The dtype is fixed, so the inner loop does not check the type of each element.</li>
+          <li>Matrix products go through a tuned BLAS library.</li>
+        </ul>
+        <p>The gap shows up when the array is large. For five numbers it is tiny.</p>
+      </article>
+    </section>
+
+    <section id="attributes">
+      <h2>Attributes</h2>
+      <p>From <code>ndarray_basics.py</code>. <code>np.arange(10).reshape(2, 5)</code> on this machine:</p>
+      <table>
+        <thead>
+          <tr><th>Attribute</th><th>Value</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>shape</code></td><td><code>(2, 5)</code></td><td>2 rows, 5 columns</td></tr>
+          <tr><td><code>size</code></td><td><code>10</code></td><td>number of elements</td></tr>
+          <tr><td><code>ndim</code></td><td><code>2</code></td><td>number of axes</td></tr>
+          <tr><td><code>dtype</code></td><td><code>int64</code></td><td>type of each element</td></tr>
+          <tr><td><code>itemsize</code></td><td><code>8</code></td><td>bytes for one element</td></tr>
+          <tr><td><code>nbytes</code></td><td><code>80</code></td><td><code>size * itemsize</code>, the whole array</td></tr>
+        </tbody>
+      </table>
+      <article>
+        <p class="q">Why is itemsize 8 and nbytes 80?</p>
+        <p><code>int64</code> is 8 bytes. There are 10 elements, so the array occupies 80 bytes. Itemsize is one element. Nbytes is the whole array.</p>
+      </article>
+      <article>
+        <p class="q">What do <code>real</code>, <code>imag</code>, <code>flat</code>, and <code>flatten</code> do?</p>
+        <p><code>real</code> and <code>imag</code> are the real and imaginary parts. For an integer array, <code>imag</code> is all zeros. <code>flat</code> is an iterator over the elements. <code>flatten()</code> returns a new 1D copy.</p>
+      </article>
+    </section>
+
+    <section id="shape">
+      <h2>Shape and 3D arrays</h2>
+      <article>
+        <p class="q">What does <code>np.arange(24).reshape(2, 3, 4)</code> mean?</p>
+        <p>24 numbers folded into 2 blocks, 3 rows in each block, 4 values in each row. The product of the dimensions must equal the number of elements: <code>2 * 3 * 4 = 24</code>.</p>
+      </article>
+      <article>
+        <p class="q">How do you know an array is 3D?</p>
+        <p>Count the nested lists. In <code>ndarray_basics.py</code>, <code>g</code> is two blocks, each block has two rows, and each row has three numbers. <code>g.shape</code> is <code>(2, 2, 3)</code> and <code>g.ndim</code> is 3.</p>
+        <pre>g[0]        # first block, shape (2, 3)
+g[0, 1]     # one row, [10, 12, 13]
+g[1, 2, 3]  # would be out of range; last value is g[1, 1, 2] == 113</pre>
+        <p>A nested <code>for</code> peels off one axis per loop. The outer loop gets a block, the middle loop gets a row, and the inner loop gets one number.</p>
+      </article>
+    </section>
+
+    <section id="index">
+      <h2>Indexing</h2>
+      <p>From <code>indexing.py</code>. <code>scores</code> has shape <code>(4, 3)</code>.</p>
+      <table>
+        <thead>
+          <tr><th>Expression</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>scores[0]</code></td><td>first row, the first student</td></tr>
+          <tr><td><code>scores[:, 1]</code></td><td>every row, column 1</td></tr>
+          <tr><td><code>scores[1:3, 0]</code></td><td>rows 1 and 2, column 0. The stop index is excluded.</td></tr>
+          <tr><td><code>scores[-1, -1]</code></td><td>last row, last column</td></tr>
+        </tbody>
+      </table>
+      <article>
+        <p class="q">How do you label a printed array with an f-string?</p>
+        <p>The <code>f</code> sits against the quote, and the expression goes inside braces:</p>
+        <pre>print(f"first student: {scores[0]}")</pre>
+      </article>
+    </section>
+
+    <section id="bool">
+      <h2>Boolean indexing</h2>
+      <article>
+        <p class="q">How do you keep only the scores that pass?</p>
+        <p>A comparison returns a True/False array of the same shape. Using that array as an index keeps the True positions. From <code>boolean_index.py</code>:</p>
+        <pre>passed = scores &gt;= 75
+scores[passed]          # only the passing scores
+scores[scores &lt; 80]     # the condition can sit inside the brackets</pre>
+      </article>
+    </section>
+
+    <section id="broadcast">
+      <h2>Broadcasting</h2>
+      <article>
+        <p class="q">What is broadcasting?</p>
+        <p>NumPy stretches a smaller array so an operation can run against a larger one, without you writing a loop. From <code>broadcasting.py</code>:</p>
+        <ul>
+          <li><code>marks + 5</code> adds 5 to every cell.</li>
+          <li><code>marks + grace</code>, with <code>grace</code> shaped <code>(3,)</code>, adds one bonus per column.</li>
+          <li><code>marks * [[1], [2]]</code> leaves row 0 as it is and doubles row 1.</li>
+        </ul>
+        <p>Sizes line up from the right. A dimension of 1 can stretch. Dimensions that differ and are both greater than 1 do not broadcast.</p>
+      </article>
+    </section>
+
+    <section id="axis">
+      <h2>Axis</h2>
+      <article>
+        <p class="q">What do axis 0 and axis 1 mean?</p>
+        <p>Axis is the direction that gets combined, and that direction disappears from the result. For the table in <code>axis_stats.py</code>:</p>
+        <pre>[[70, 80, 90],
+ [60, 75, 85],
+ [90, 88, 92]]</pre>
+        <p><code>mean(axis=0)</code> walks down each column: <code>[73.33, 81, 89]</code>. One number per subject.</p>
+        <p><code>mean(axis=1)</code> walks across each row: <code>[80, 73.33, 90]</code>. One number per student.</p>
+        <p><code>mean()</code> with no axis uses every cell and returns one number, <code>81.11</code>.</p>
+      </article>
+    </section>
+
+    <section id="stack">
+      <h2>Stacking</h2>
+      <article>
+        <p class="q">How do you join two arrays?</p>
+        <p>From <code>stacking.py</code>. Two arrays of shape <code>(2, 2)</code>:</p>
+        <ul>
+          <li><code>np.vstack((a, b))</code> places <code>b</code> under <code>a</code>. Shape <code>(4, 2)</code>. Same as <code>concatenate(..., axis=0)</code>.</li>
+          <li><code>np.hstack((a, b))</code> places <code>b</code> to the right. Shape <code>(2, 4)</code>. Same as <code>concatenate(..., axis=1)</code>.</li>
+        </ul>
+        <p>The sizes on the other axis must already match.</p>
+      </article>
+    </section>
+
+    <section id="matmul">
+      <h2>Matrix product and element-wise product</h2>
+      <article>
+        <p class="q">What is the difference between <code>@</code> and <code>*</code>?</p>
+        <p><code>@</code> is the matrix product: rows times columns. The inner sizes must match. In <code>matmul.py</code>, <code>qty</code> is <code>(2, 3)</code> and <code>prices</code> is <code>(3,)</code>, so <code>qty @ prices</code> is <code>(2,)</code> and equals <code>[80, 110]</code>.</p>
+        <p><code>*</code> multiplies matching positions. It does not combine a row with a column. <code>x * y</code> and <code>x @ y</code> are different results.</p>
+      </article>
+    </section>
+
+    <section id="reshape">
+      <h2>Reshape and transpose</h2>
+      <article>
+        <p class="q">What does reshape change?</p>
+        <p>Only the view of the same numbers. <code>np.arange(12).reshape(3, 4)</code> works because <code>3 * 4 = 12</code>. A reshape whose product does not match the element count raises an error.</p>
+        <p><code>grid.T</code> swaps rows and columns, so <code>(3, 4)</code> becomes <code>(4, 3)</code>. <code>ravel()</code> returns a 1D view when the memory is contiguous. <code>flatten()</code> always returns a copy.</p>
+      </article>
+    </section>
+
+    <section id="sort">
+      <h2>Sort, where, and clip</h2>
+      <article>
+        <p class="q">How do sort, argsort, where, and clip differ?</p>
+        <p>From <code>sort_where.py</code>, with <code>scores = [92, 85, 90, 64, 78, 55]</code>:</p>
+        <ul>
+          <li><code>np.sort(scores)</code> returns the values from low to high. The original array stays in place.</li>
+          <li><code>np.argsort(scores)</code> returns the indexes that would produce that order. <code>scores[np.argsort(scores)]</code> matches <code>np.sort</code>.</li>
+          <li><code>np.where(scores &gt;= 75, "pass", "fail")</code> picks one label per element.</li>
+          <li><code>np.clip(scores, 60, 90)</code> pulls every value into the range 60 through 90. 55 becomes 60. 92 becomes 90.</li>
+        </ul>
+        <p><code>argsort</code> is the one to mention when a second array must follow the same order as the first.</p>
+      </article>
+    </section>
+
+    <section id="pitfalls">
+      <h2>Pitfalls worth mentioning</h2>
+      <article>
+        <p class="q">Why did <code>random.random((2, 2))</code> fail?</p>
+        <p>Python’s <code>random.random()</code> takes no arguments and returns one float. NumPy’s <code>np.random.random((2, 2))</code> accepts a shape and returns an array of values in <code>[0.0, 1.0)</code>. <code>np.floor(10 * that)</code> then gives floats such as <code>6.0</code>, still floats because <code>floor</code> returns floats.</p>
+      </article>
+    </section>
+
+    <footer>
+      Practice files: ndarray_basics.py, indexing.py, boolean_index.py, broadcasting.py, axis_stats.py, stacking.py, matmul.py, reshape_transpose.py, sort_where.py.
+    </footer>
+  </main>
+</body>
+</html>
